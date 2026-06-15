@@ -2,51 +2,77 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Nosso Draco provisório (Placeholder)
+// Nosso Draco provisório
 const draco = {
     x: canvas.width / 2 - 25,
     y: canvas.height / 2 - 25,
     width: 50,
     height: 50,
-    color: '#5FD3FF'
+    color: '#5FD3FF' // Azul Neon[cite: 2]
 };
 
-// 1. Variáveis de Sobrevivência (Status do Draco)
+// Variáveis de Sobrevivência
 let dracoStats = {
     fome: 100,
     higiene: 100
 };
 
-// 2. Sistema de degradação: as necessidades caem com o tempo
-// O setInterval roda o código repetidamente a cada X milissegundos (1000ms = 1 segundo)
+// Sistema de degradação
 setInterval(() => {
-    // Impede que os valores fiquem abaixo de zero
     if (dracoStats.fome > 0) dracoStats.fome -= 5;
     if (dracoStats.higiene > 0) dracoStats.higiene -= 2;
+}, 1000);
 
-    // Mostra no console os valores caindo
-    console.clear();
-    console.log(`Status do Draco -> Fome: ${dracoStats.fome} | Higiene: ${dracoStats.higiene}`);
-    
-    // Simulação rápida de Game Over no console
-    if (dracoStats.fome === 0) {
-        console.log("ALERTA: O Draco desmaiou de fome!");
-    }
-}, 1000); // Cai a cada 1 segundo
-
-// 3. Input do Jogador: Ação de Alimentar
+// Input do Jogador: Detecta onde o mouse clicou
 canvas.addEventListener('mousedown', (event) => {
-    // Por enquanto, qualquer clique do mouse na tela alimenta o Draco
-    dracoStats.fome = 100;
-    console.log("Ação: Draco foi alimentado! Fome restaurada para 100.");
+    // Calcula a posição exata do clique dentro do canvas
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Lógica do botão "Alimentar" (posição X: 150 a 300, Y: 500 a 540)
+    if (mouseX >= 150 && mouseX <= 300 && mouseY >= 500 && mouseY <= 540) {
+        dracoStats.fome = 100;
+    }
+
+    // Lógica do botão "Limpar" (posição X: 500 a 650, Y: 500 a 540)
+    if (mouseX >= 500 && mouseX <= 650 && mouseY >= 500 && mouseY <= 540) {
+        dracoStats.higiene = 100;
+    }
 });
 
-// Função responsável por desenhar tudo na tela
+// Função para desenhar a interface (Textos e Botões)
+function drawHUD() {
+    // Textos de Status
+    ctx.fillStyle = '#EAF7FF'; // Branco Gelo[cite: 2]
+    ctx.font = '20px "Courier New", Courier, monospace'; // Fonte estilo retrô/terminal
+    ctx.fillText(`Fome: ${dracoStats.fome}%`, 20, 40);
+    ctx.fillText(`Higiene: ${dracoStats.higiene}%`, 20, 70);
+
+    // Botão Alimentar
+    ctx.fillStyle = '#FF8E8E'; // Coral Claro[cite: 2]
+    ctx.fillRect(150, 500, 150, 40);
+    ctx.fillStyle = '#132238'; // Azul Escuro (cor do texto dentro do botão)[cite: 2]
+    ctx.fillText('ALIMENTAR', 170, 525);
+
+    // Botão Limpar
+    ctx.fillStyle = '#FF8E8E'; // Coral Claro[cite: 2]
+    ctx.fillRect(500, 500, 150, 40);
+    ctx.fillStyle = '#132238'; // Azul Escuro[cite: 2]
+    ctx.fillText('LIMPAR', 535, 525);
+}
+
+// Função principal de desenho
 function draw() {
+    // Limpa a tela
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Desenha o Draco
     ctx.fillStyle = draco.color;
     ctx.fillRect(draco.x, draco.y, draco.width, draco.height);
+
+    // Desenha a Interface
+    drawHUD();
 }
 
 // O Loop Central do Jogo
@@ -55,4 +81,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+// Inicia o jogo
 gameLoop();
