@@ -64,22 +64,16 @@ function drawHUD() {
 
 // Função principal de desenho
 function draw() {
-    // Limpa a tela
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Desenha o Draco
     ctx.fillStyle = draco.color;
     ctx.fillRect(draco.x, draco.y, draco.width, draco.height);
 
-    // Desenha a Interface
     drawHUD();
 }
 
-// O Loop Central do Jogo
 function gameLoop() {
     draw();
     requestAnimationFrame(gameLoop);
 }
-
-// Inicia o jogo
 gameLoop();
