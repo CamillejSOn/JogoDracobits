@@ -4,16 +4,57 @@
     box-sizing: border-box;
 }
 
+html,
 body {
-    background-color: #000; /* Fundo escuro em volta do jogo */
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 100vh;
+    justify-content: center;
+
+    min-height: 100vh;
+    padding: 20px;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #1d3655 0%,
+            #0a1422 55%,
+            #03070d 100%
+        );
+
+    font-family: "Courier New", Courier, monospace;
+}
+
+.game-container {
+    position: relative;
+
+    width: min(100%, 800px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 canvas {
-    background-color: #132238; /* Azul Escuro do cenário do DracoBits */
-    border: 2px solid #5FD3FF; /* Bordinha neon para dar um charme digital */
-    box-shadow: 0 0 20px rgba(95, 211, 255, 0.2);
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    background-color: #132238;
+
+    border: 2px solid #5fd3ff;
+    border-radius: 8px;
+
+    box-shadow:
+        0 0 20px rgba(95, 211, 255, 0.25),
+        0 0 50px rgba(123, 109, 204, 0.15);
+
+    image-rendering: pixelated;
 }
