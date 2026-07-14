@@ -25,7 +25,8 @@ const GAME_STATES = {
     CREDITS: 'credits',
     TUTORIAL: 'tutorial',
     PLAYING: 'playing',
-    GAME_OVER: 'gameover'
+    GAME_OVER: 'gameover',
+    VICTORY: 'victory'
 };
 
 let currentState = GAME_STATES.RATING;
@@ -51,9 +52,9 @@ const tutorialMessages = [
     {
         title: 'SUA MISSÃO',
         lines: [
-            'Mantenha Draco saudável.',
-            'Proteja-o das falhas do sistema.',
-            'Agora você está pronto para iniciar.'
+            'Mantenha Draco saudável para restaurar o núcleo.',
+            'A estabilidade aumenta quando as necessidades estão altas.',
+            'Alcance 100% de estabilidade para vencer.'
         ]
     }
 ];
@@ -75,6 +76,7 @@ let dracoStats = {
 
 let feedbackMessage = '';
 let feedbackUntil = 0;
+let coreStability = 0;
 
 const buttons = {
     menuPlay: {
@@ -157,7 +159,7 @@ sleep: {
         label: 'TENTAR NOVAMENTE'
     },
 
-    gameOverMenu: {
+    endMenu: {
         x: 420,
         y: 440,
         width: 200,
@@ -214,11 +216,22 @@ function resetGame() {
         energia: 100
     };
 
+    coreStability = 0;
+
     feedbackMessage = 'Mantenha Draco saudável!';
     feedbackUntil = performance.now() + 3000;
 
     lastStatsUpdate = performance.now();
     currentState = GAME_STATES.PLAYING;
+}
+
+function getAverageStats() {
+    return (
+        dracoStats.fome +
+        dracoStats.higiene +
+        dracoStats.felicidade +
+        dracoStats.energia
+    ) / 4;
 }
 
 function updateStats(currentTime) {
@@ -237,13 +250,30 @@ function updateStats(currentTime) {
     dracoStats.felicidade = clamp(dracoStats.felicidade - 2);
     dracoStats.energia = clamp(dracoStats.energia - 1);
 
-    if (
-        dracoStats.fome <= 0 ||
-        dracoStats.higiene <= 0 ||
-        dracoStats.felicidade <= 0 ||
-        dracoStats.energia <= 0
-    ) {
+    const lowestStat = Math.min(
+        dracoStats.fome,
+        dracoStats.higiene,
+        dracoStats.felicidade,
+        dracoStats.energia
+    );
+
+    if (lowestStat <= 0) {
         currentState = GAME_STATES.GAME_OVER;
+        return;
+    }
+
+    const averageStats = getAverageStats();
+
+    if (lowestStat >= 70) {
+        coreStability = clamp(coreStability + 2);
+    } else if (lowestStat >= 40) {
+        coreStability = clamp(coreStability + 1);
+    } else if (averageStats < 45) {
+        coreStability = clamp(coreStability - 2);
+    }
+
+    if (coreStability >= 100) {
+        currentState = GAME_STATES.VICTORY;
     }
 }
 
@@ -481,7 +511,7 @@ function drawHelp() {
     );
 
     drawCenteredText(
-        'Mantenha Draco saudável e proteja o Núcleo Arcadia.',
+        'Mantenha Draco saudável e restaure o núcleo até 100%.',
         175,
         16
     );
@@ -558,7 +588,6 @@ function drawCredits() {
     );
 
     drawCenteredText(
-        'Yuri Lima',
         252,
         22,
         COLORS.iceWhite
@@ -754,6 +783,26 @@ function drawHUD() {
         dracoStats.energia,
         getStatColor(dracoStats.energia)
     );
+
+    drawPanel(500, 20, 280, 90);
+
+ctx.fillStyle = COLORS.iceWhite;
+ctx.font = 'bold 15px "Courier New", Courier, monospace';
+
+ctx.fillText(
+    `Estabilidade do Núcleo: ${coreStability}%`,
+    520,
+    52
+);
+
+drawProgressBar(
+    520,
+    68,
+    235,
+    18,
+    coreStability,
+    COLORS.neonBlue
+);
 }
 
 function drawDraco() {
@@ -871,7 +920,7 @@ function drawGameOver() {
 
     drawButton(buttons.restart);
 
-    drawButton(buttons.gameOverMenu, {
+    drawButton(buttons.endMenu, {
         backgroundColor: COLORS.backgroundLight,
         textColor: COLORS.iceWhite,
         borderColor: COLORS.neonBlue
@@ -985,17 +1034,96 @@ canvas.addEventListener('mousedown', (event) => {
     return;
 }
 
-    if (currentState === GAME_STATES.GAME_OVER) {
+    if (
+        currentState === GAME_STATES.GAME_OVER ||
+        currentState === GAME_STATES.VICTORY
+    ) {
         if (isPointInsideButton(mouseX, mouseY, buttons.restart)) {
-            resetGame();
+            startTutorial();
             return;
         }
 
-        if (isPointInsideButton(mouseX, mouseY, buttons.gameOverMenu)) {
+        if (isPointInsideButton(mouseX, mouseY, buttons.endMenu)) {
             currentState = GAME_STATES.MENU;
         }
     }
 });
+
+function drawVictory() {
+    const victoryGradient = ctx.createRadialGradient(
+        WIDTH / 2,
+        HEIGHT / 2,
+        20,
+        WIDTH / 2,
+        HEIGHT / 2,
+        430
+    );
+
+    victoryGradient.addColorStop(
+        0,
+        'rgba(116, 227, 154, 0.45)'
+    );
+
+    victoryGradient.addColorStop(
+        1,
+        'rgba(19, 34, 56, 0.95)'
+    );
+
+    ctx.fillStyle = victoryGradient;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    drawPanel(90, 85, 620, 430);
+
+    drawCenteredText(
+        'NÚCLEO RESTAURADO',
+        165,
+        40,
+        COLORS.success,
+        'bold'
+    );
+
+    drawCenteredText(
+        'Draco alcançou a energia necessária',
+        235,
+        19,
+        COLORS.iceWhite
+    );
+
+    drawCenteredText(
+        'para estabilizar o Núcleo Arcadia.',
+        270,
+        19,
+        COLORS.iceWhite
+    );
+
+    drawCenteredText(
+        'O vínculo entre vocês salvou este mundo.',
+        330,
+        20,
+        COLORS.neonBlue,
+        'bold'
+    );
+
+    drawCenteredText(
+        'DEMO CONCLUÍDA',
+        380,
+        24,
+        COLORS.coral,
+        'bold'
+    );
+
+    drawButton(buttons.restart, {
+        backgroundColor: COLORS.success,
+        textColor: COLORS.darkText
+    });
+
+    drawButton(buttons.endMenu, {
+        backgroundColor: COLORS.backgroundLight,
+        textColor: COLORS.iceWhite,
+        borderColor: COLORS.neonBlue
+    });
+}
+
 function update(currentTime) {
     updateParticles();
     updateStats(currentTime);
@@ -1040,6 +1168,10 @@ function draw() {
         case GAME_STATES.GAME_OVER:
             drawGameOver();
             break;
+
+        case GAME_STATES.VICTORY:
+            drawVictory();
+            break;    
 
         default:
             drawMenu();
