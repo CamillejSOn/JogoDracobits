@@ -42,11 +42,11 @@ const tutorialMessages = [
         ]
     },
     {
-        title: 'NECESSIDADES DE DRACO',
+        title: 'NECESSIDADES E FALHAS',
         lines: [
-            'A fome e a higiene diminuem com o tempo.',
-            'Use os botões para cuidar de Draco.',
-            'Se uma necessidade chegar a zero, você perde.'
+            'As necessidades de Draco diminuem com o tempo.',
+            'Fragmentos corrompidos surgirão pelo cenário.',
+            'Clique neles antes que a falha se espalhe.'
         ]
     },
     {
@@ -77,6 +77,13 @@ let dracoStats = {
 let feedbackMessage = '';
 let feedbackUntil = 0;
 let coreStability = 0;
+
+let corruptedFragment = null;
+let nextFragmentTime = performance.now() + 5000;
+
+const fragmentDuration = 3500;
+const fragmentMinInterval = 4500;
+const fragmentMaxInterval = 7500;
 
 const buttons = {
     menuPlay: {
@@ -208,6 +215,35 @@ function showFeedback(message, duration = 1600) {
     feedbackUntil = performance.now() + duration;
 }
 
+function randomBetween(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function scheduleNextFragment(currentTime) {
+    nextFragmentTime =
+        currentTime +
+        randomBetween(fragmentMinInterval, fragmentMaxInterval);
+}
+
+function createCorruptedFragment(currentTime) {
+    const size = randomBetween(42, 62);
+
+    corruptedFragment = {
+        x: randomBetween(330, WIDTH - size - 35),
+        y: randomBetween(145, 410),
+        size,
+        createdAt: currentTime,
+        expiresAt: currentTime + fragmentDuration,
+        rotation: Math.random() * Math.PI,
+        pulse: 0
+    };
+
+    showFeedback(
+        'Echo: fragmento corrompido detectado!',
+        2200
+    );
+}
+
 function resetGame() {
     dracoStats = {
         fome: 100,
@@ -217,6 +253,8 @@ function resetGame() {
     };
 
     coreStability = 0;
+    corruptedFragment = null;
+    scheduleNextFragment(performance.now());
 
     feedbackMessage = 'Mantenha Draco saudável!';
     feedbackUntil = performance.now() + 3000;
@@ -274,6 +312,47 @@ function updateStats(currentTime) {
 
     if (coreStability >= 100) {
         currentState = GAME_STATES.VICTORY;
+    }
+}
+
+function updateCorruptedFragment(currentTime) {
+    if (currentState !== GAME_STATES.PLAYING) {
+        return;
+    }
+
+    if (
+        !corruptedFragment &&
+        currentTime >= nextFragmentTime
+    ) {
+        createCorruptedFragment(currentTime);
+        return;
+    }
+
+    if (
+        corruptedFragment &&
+        currentTime >= corruptedFragment.expiresAt
+    ) {
+        corruptedFragment = null;
+
+        dracoStats.energia = clamp(
+            dracoStats.energia - 15
+        );
+
+        coreStability = clamp(
+            coreStability - 8
+        );
+
+        showFeedback(
+            'A falha se espalhou! Draco perdeu energia.',
+            2400
+        );
+
+        scheduleNextFragment(currentTime);
+    }
+
+    if (corruptedFragment) {
+        corruptedFragment.pulse += 0.08;
+        corruptedFragment.rotation += 0.01;
     }
 }
 
@@ -853,8 +932,80 @@ function drawFeedback() {
     );
 }
 
+function drawCorruptedFragment() {
+    if (!corruptedFragment) {
+        return;
+    }
+
+    const fragment = corruptedFragment;
+
+    const pulseScale =
+        1 + Math.sin(fragment.pulse) * 0.12;
+
+    const remainingTime =
+        Math.max(
+            0,
+            fragment.expiresAt - performance.now()
+        );
+
+    const remainingPercentage =
+        remainingTime / fragmentDuration;
+
+    ctx.save();
+
+    ctx.translate(
+        fragment.x + fragment.size / 2,
+        fragment.y + fragment.size / 2
+    );
+
+    ctx.rotate(fragment.rotation);
+    ctx.scale(pulseScale, pulseScale);
+
+    ctx.shadowColor = COLORS.danger;
+    ctx.shadowBlur = 30;
+
+    ctx.fillStyle = 'rgba(214, 64, 69, 0.85)';
+    ctx.strokeStyle = COLORS.coral;
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -fragment.size / 2);
+    ctx.lineTo(fragment.size / 2, 0);
+    ctx.lineTo(0, fragment.size / 2);
+    ctx.lineTo(-fragment.size / 2, 0);
+
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.strokeStyle = COLORS.iceWhite;
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.moveTo(-10, -14);
+    ctx.lineTo(10, 14);
+
+    ctx.moveTo(12, -12);
+    ctx.lineTo(-12, 12);
+
+    ctx.stroke();
+
+    ctx.restore();
+
+    drawProgressBar(
+        fragment.x,
+        fragment.y + fragment.size + 10,
+        fragment.size,
+        7,
+        remainingPercentage * 100,
+        COLORS.danger
+    );
+}
+
 function drawGameplay() {
     drawHUD();
+    drawCorruptedFragment();
     drawDraco();
     drawFeedback();
 
@@ -927,6 +1078,27 @@ function drawGameOver() {
     });
 }
 
+function isPointInsideFragment(x, y) {
+    if (!corruptedFragment) {
+        return false;
+    }
+
+    const centerX =
+        corruptedFragment.x +
+        corruptedFragment.size / 2;
+
+    const centerY =
+        corruptedFragment.y +
+        corruptedFragment.size / 2;
+
+    const distance = Math.hypot(
+        x - centerX,
+        y - centerY
+    );
+
+    return distance <= corruptedFragment.size * 0.7;
+}
+
 canvas.addEventListener('mousedown', (event) => {
     const rect = canvas.getBoundingClientRect();
 
@@ -993,6 +1165,27 @@ canvas.addEventListener('mousedown', (event) => {
         showFeedback('Draco foi alimentado!');
         return;
     }
+
+    if (isPointInsideFragment(mouseX, mouseY)) {
+    corruptedFragment = null;
+
+    coreStability = clamp(
+        coreStability + 10
+    );
+
+    dracoStats.felicidade = clamp(
+        dracoStats.felicidade + 5
+    );
+
+    showFeedback(
+        'Fragmento estabilizado! +10% de estabilidade',
+        2200
+    );
+
+    scheduleNextFragment(performance.now());
+
+    return;
+}
 
     if (isPointInsideButton(mouseX, mouseY, buttons.clean)) {
         dracoStats.higiene = clamp(dracoStats.higiene + 35);
@@ -1127,6 +1320,7 @@ function drawVictory() {
 function update(currentTime) {
     updateParticles();
     updateStats(currentTime);
+    updateCorruptedFragment(currentTime);
 
     if (
         currentState === GAME_STATES.RATING &&
