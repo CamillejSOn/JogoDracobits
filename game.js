@@ -23,12 +23,40 @@ const GAME_STATES = {
     MENU: 'menu',
     HELP: 'help',
     CREDITS: 'credits',
+    TUTORIAL: 'tutorial',
     PLAYING: 'playing',
     GAME_OVER: 'gameover'
 };
 
 let currentState = GAME_STATES.RATING;
+let tutorialPage = 0;
 
+const tutorialMessages = [
+    {
+        title: 'ECHO // CONEXÃO INICIADA',
+        lines: [
+            'Bem-vindo ao Núcleo Arcadia.',
+            'Este é Draco, uma das últimas criaturas digitais.',
+            'Ele depende dos seus cuidados para sobreviver.'
+        ]
+    },
+    {
+        title: 'NECESSIDADES DE DRACO',
+        lines: [
+            'A fome e a higiene diminuem com o tempo.',
+            'Use os botões para cuidar de Draco.',
+            'Se uma necessidade chegar a zero, você perde.'
+        ]
+    },
+    {
+        title: 'SUA MISSÃO',
+        lines: [
+            'Mantenha Draco saudável.',
+            'Proteja-o das falhas do sistema.',
+            'Agora você está pronto para iniciar.'
+        ]
+    }
+];
 
 const draco = {
     x: WIDTH / 2 - 35,
@@ -74,6 +102,14 @@ const buttons = {
         width: 200,
         height: 48,
         label: 'VOLTAR'
+    },
+
+    tutorialNext: {
+        x: 300,
+        y: 475,
+        width: 200,
+        height: 50,
+        label: 'CONTINUAR'
     },
 
     feed: {
@@ -134,6 +170,11 @@ const ratingDuration = 3500;
 
 let lastStatsUpdate = performance.now();
 const statsUpdateInterval = 1000;
+
+function startTutorial() {
+    tutorialPage = 0;
+    currentState = GAME_STATES.TUTORIAL;
+}
 
 function resetGame() {
     dracoStats = {
@@ -515,6 +556,85 @@ function drawCredits() {
         textColor: COLORS.iceWhite
     });
 }
+
+function drawTutorial() {
+    const message = tutorialMessages[tutorialPage];
+
+    drawCenteredText(
+        'TRANSMISSÃO DE ECHO',
+        75,
+        34,
+        COLORS.neonBlue,
+        'bold'
+    );
+
+    drawPanel(85, 125, 630, 330);
+
+    // Representação visual simples da Echo
+    ctx.save();
+
+    ctx.strokeStyle = COLORS.softPurple;
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.arc(170, 285, 60, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(123, 109, 204, 0.25)';
+
+    ctx.beginPath();
+    ctx.arc(170, 285, 48, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = COLORS.neonBlue;
+
+    ctx.fillRect(146, 270, 12, 12);
+    ctx.fillRect(182, 270, 12, 12);
+
+    ctx.restore();
+
+    // Título da mensagem
+    ctx.fillStyle = COLORS.coral;
+    ctx.font = 'bold 20px "Courier New", Courier, monospace';
+
+    ctx.fillText(
+        message.title,
+        270,
+        205
+    );
+
+    // Conteúdo da mensagem
+    message.lines.forEach((line, index) => {
+        ctx.fillStyle = COLORS.iceWhite;
+        ctx.font = '17px "Courier New", Courier, monospace';
+
+        ctx.fillText(
+            line,
+            270,
+            255 + index * 42
+        );
+    });
+
+    // Na última página, muda o texto do botão
+    if (tutorialPage === tutorialMessages.length - 1) {
+        buttons.tutorialNext.label = 'INICIAR DEMO';
+    } else {
+        buttons.tutorialNext.label = 'CONTINUAR';
+    }
+
+    drawButton(buttons.tutorialNext, {
+        backgroundColor: COLORS.softPurple,
+        textColor: COLORS.iceWhite
+    });
+
+    drawCenteredText(
+        `${tutorialPage + 1} / ${tutorialMessages.length}`,
+        555,
+        14,
+        'rgba(234, 247, 255, 0.7)'
+    );
+}
+
 function getStatColor(value) {
     if (value > 60) {
         return COLORS.success;
@@ -677,7 +797,7 @@ canvas.addEventListener('mousedown', (event) => {
 
     if (currentState === GAME_STATES.MENU) {
         if (isPointInsideButton(mouseX, mouseY, buttons.menuPlay)) {
-            resetGame();
+            startTutorial();
             return;
         }
 
@@ -703,6 +823,27 @@ canvas.addEventListener('mousedown', (event) => {
 
         return;
     }
+
+    if (currentState === GAME_STATES.TUTORIAL) {
+    if (
+        isPointInsideButton(
+            mouseX,
+            mouseY,
+            buttons.tutorialNext
+        )
+    ) {
+        const isLastPage =
+            tutorialPage === tutorialMessages.length - 1;
+
+        if (isLastPage) {
+            resetGame();
+        } else {
+            tutorialPage++;
+        }
+    }
+
+    return;
+}
 
     if (currentState === GAME_STATES.PLAYING) {
         if (isPointInsideButton(mouseX, mouseY, buttons.feed)) {
@@ -759,6 +900,10 @@ function draw() {
 
         case GAME_STATES.CREDITS:
             drawCredits();
+            break;
+
+        case GAME_STATES.TUTORIAL:
+            drawTutorial();
             break;
 
         case GAME_STATES.PLAYING:
