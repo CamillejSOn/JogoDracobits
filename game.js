@@ -68,8 +68,13 @@ const draco = {
 
 let dracoStats = {
     fome: 100,
-    higiene: 100
+    higiene: 100, 
+    felicidade: 100,
+    energia: 100
 };
+
+let feedbackMessage = '';
+let feedbackUntil = 0;
 
 const buttons = {
     menuPlay: {
@@ -113,20 +118,36 @@ const buttons = {
     },
 
     feed: {
-        x: 120,
-        y: 500,
-        width: 180,
-        height: 48,
-        label: 'ALIMENTAR'
-    },
+    x: 45,
+    y: 505,
+    width: 160,
+    height: 48,
+    label: 'ALIMENTAR'
+},
 
-    clean: {
-        x: 500,
-        y: 500,
-        width: 180,
-        height: 48,
-        label: 'LIMPAR'
-    },
+clean: {
+    x: 225,
+    y: 505,
+    width: 160,
+    height: 48,
+    label: 'LIMPAR'
+},
+
+play: {
+    x: 405,
+    y: 505,
+    width: 160,
+    height: 48,
+    label: 'BRINCAR'
+},
+
+sleep: {
+    x: 585,
+    y: 505,
+    width: 160,
+    height: 48,
+    label: 'DORMIR'
+},
 
     restart: {
         x: 180,
@@ -176,11 +197,25 @@ function startTutorial() {
     currentState = GAME_STATES.TUTORIAL;
 }
 
+function clamp(value, min = 0, max = 100) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function showFeedback(message, duration = 1600) {
+    feedbackMessage = message;
+    feedbackUntil = performance.now() + duration;
+}
+
 function resetGame() {
     dracoStats = {
         fome: 100,
-        higiene: 100
+        higiene: 100,
+        felicidade: 100,
+        energia: 100
     };
+
+    feedbackMessage = 'Mantenha Draco saudável!';
+    feedbackUntil = performance.now() + 3000;
 
     lastStatsUpdate = performance.now();
     currentState = GAME_STATES.PLAYING;
@@ -197,10 +232,17 @@ function updateStats(currentTime) {
 
     lastStatsUpdate = currentTime;
 
-    dracoStats.fome = Math.max(0, dracoStats.fome - 5);
-    dracoStats.higiene = Math.max(0, dracoStats.higiene - 2);
+    dracoStats.fome = clamp(dracoStats.fome - 3);
+    dracoStats.higiene = clamp(dracoStats.higiene - 2);
+    dracoStats.felicidade = clamp(dracoStats.felicidade - 2);
+    dracoStats.energia = clamp(dracoStats.energia - 1);
 
-    if (dracoStats.fome <= 0 || dracoStats.higiene <= 0) {
+    if (
+        dracoStats.fome <= 0 ||
+        dracoStats.higiene <= 0 ||
+        dracoStats.felicidade <= 0 ||
+        dracoStats.energia <= 0
+    ) {
         currentState = GAME_STATES.GAME_OVER;
     }
 }
@@ -422,65 +464,65 @@ function drawMenu() {
 function drawHelp() {
     drawCenteredText(
         'COMO JOGAR',
-        80,
-        38,
+        65,
+        36,
         COLORS.neonBlue,
         'bold'
     );
 
-    drawPanel(100, 125, 600, 350);
+    drawPanel(75, 100, 650, 385);
 
     drawCenteredText(
         'OBJETIVO',
-        170,
-        23,
+        140,
+        22,
         COLORS.coral,
         'bold'
     );
 
     drawCenteredText(
-        'Mantenha Draco saudável e impeça o',
-        210,
-        18
+        'Mantenha Draco saudável e proteja o Núcleo Arcadia.',
+        175,
+        16
     );
 
     drawCenteredText(
-        'colapso do Núcleo Arcadia.',
-        238,
-        18
-    );
-
-    drawCenteredText(
-        'CONTROLES',
-        295,
-        23,
+        'AÇÕES',
+        225,
+        22,
         COLORS.coral,
         'bold'
     );
 
     drawCenteredText(
-        'Use o mouse para clicar nos botões.',
-        335,
-        18
+        'ALIMENTAR — recupera fome.',
+        260,
+        16
     );
 
     drawCenteredText(
-        'ALIMENTAR restaura a fome de Draco.',
-        370,
-        18
+        'LIMPAR — recupera higiene.',
+        292,
+        16
     );
 
     drawCenteredText(
-        'LIMPAR restaura a higiene de Draco.',
-        405,
-        18
+        'BRINCAR — recupera felicidade e gasta energia.',
+        324,
+        16
     );
 
     drawCenteredText(
-        'Se uma necessidade chegar a zero, você perde.',
-        445,
+        'DORMIR — recupera energia, mas aumenta a fome.',
+        356,
+        16
+    );
+
+    drawCenteredText(
+        'Você perde se qualquer necessidade chegar a zero.',
+        420,
         16,
-        COLORS.iceWhite
+        '#FFD166'
     );
 
     drawButton(buttons.back, {
@@ -660,38 +702,57 @@ function drawProgressBar(x, y, width, height, value, color) {
 }
 
 function drawHUD() {
-    drawPanel(20, 20, 300, 130);
+    drawPanel(20, 20, 300, 235);
 
     ctx.fillStyle = COLORS.iceWhite;
-    ctx.font = 'bold 18px "Courier New", Courier, monospace';
+    ctx.font = 'bold 16px "Courier New", Courier, monospace';
 
-    ctx.fillText(`Fome: ${dracoStats.fome}%`, 40, 60);
+    ctx.fillText(`Fome: ${dracoStats.fome}%`, 40, 50);
 
     drawProgressBar(
         40,
-        72,
+        60,
         250,
-        18,
+        15,
         dracoStats.fome,
         getStatColor(dracoStats.fome)
     );
 
-    ctx.fillText(`Higiene: ${dracoStats.higiene}%`, 40, 115);
+    ctx.fillText(`Higiene: ${dracoStats.higiene}%`, 40, 100);
 
     drawProgressBar(
         40,
-        127,
+        110,
         250,
-        18,
+        15,
         dracoStats.higiene,
         getStatColor(dracoStats.higiene)
     );
 
-    drawCenteredText(
-        'Mantenha as necessidades acima de zero.',
-        175,
-        16,
-        COLORS.iceWhite
+    ctx.fillText(
+        `Felicidade: ${dracoStats.felicidade}%`,
+        40,
+        150
+    );
+
+    drawProgressBar(
+        40,
+        160,
+        250,
+        15,
+        dracoStats.felicidade,
+        getStatColor(dracoStats.felicidade)
+    );
+
+    ctx.fillText(`Energia: ${dracoStats.energia}%`, 40, 200);
+
+    drawProgressBar(
+        40,
+        210,
+        250,
+        15,
+        dracoStats.energia,
+        getStatColor(dracoStats.energia)
     );
 }
 
@@ -724,9 +785,29 @@ function drawDraco() {
     ctx.fillRect(draco.x + 28, draco.y + 47, 14, 5);
 }
 
+function drawFeedback() {
+    if (
+        !feedbackMessage ||
+        performance.now() > feedbackUntil
+    ) {
+        return;
+    }
+
+    drawPanel(170, 430, 460, 45);
+
+    drawCenteredText(
+        feedbackMessage,
+        452,
+        15,
+        COLORS.iceWhite,
+        'bold'
+    );
+}
+
 function drawGameplay() {
     drawHUD();
     drawDraco();
+    drawFeedback();
 
     drawCenteredText(
         'DRACO',
@@ -739,6 +820,17 @@ function drawGameplay() {
     drawButton(buttons.feed);
 
     drawButton(buttons.clean);
+
+    drawButton(buttons.play, {
+        backgroundColor: COLORS.softPurple,
+        textColor: COLORS.iceWhite
+    });
+
+    drawButton(buttons.sleep, {
+        backgroundColor: COLORS.backgroundLight,
+        textColor: COLORS.iceWhite,
+        borderColor: COLORS.neonBlue
+    });
 }
 
 function drawGameOver() {
@@ -846,17 +938,52 @@ canvas.addEventListener('mousedown', (event) => {
 }
 
     if (currentState === GAME_STATES.PLAYING) {
-        if (isPointInsideButton(mouseX, mouseY, buttons.feed)) {
-            dracoStats.fome = 100;
+    if (isPointInsideButton(mouseX, mouseY, buttons.feed)) {
+        dracoStats.fome = clamp(dracoStats.fome + 30);
+
+        showFeedback('Draco foi alimentado!');
+        return;
+    }
+
+    if (isPointInsideButton(mouseX, mouseY, buttons.clean)) {
+        dracoStats.higiene = clamp(dracoStats.higiene + 35);
+
+        showFeedback('Draco está limpinho!');
+        return;
+    }
+
+    if (isPointInsideButton(mouseX, mouseY, buttons.play)) {
+        if (dracoStats.energia < 15) {
+            showFeedback('Draco está cansado demais para brincar.');
             return;
         }
 
-        if (isPointInsideButton(mouseX, mouseY, buttons.clean)) {
-            dracoStats.higiene = 100;
-        }
+        dracoStats.felicidade = clamp(
+            dracoStats.felicidade + 30
+        );
 
+        dracoStats.energia = clamp(
+            dracoStats.energia - 10
+        );
+
+        showFeedback('Draco adorou brincar!');
         return;
     }
+
+    if (isPointInsideButton(mouseX, mouseY, buttons.sleep)) {
+        dracoStats.energia = clamp(
+            dracoStats.energia + 40
+        );
+
+        dracoStats.fome = clamp(
+            dracoStats.fome - 8
+        );
+
+        showFeedback('Draco descansou e recuperou energia.');
+    }
+
+    return;
+}
 
     if (currentState === GAME_STATES.GAME_OVER) {
         if (isPointInsideButton(mouseX, mouseY, buttons.restart)) {
