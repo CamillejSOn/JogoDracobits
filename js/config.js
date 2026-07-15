@@ -15,8 +15,11 @@ window.DracoBits = {
     state: {
         screen: 'rating', tutorialPage: 0, ratingStartedAt: performance.now(),
         stats: { fome: 100, higiene: 100, felicidade: 100, energia: 100 },
-        stability: 0, feedback: '', feedbackUntil: 0, lastStatsUpdate: performance.now(),
-        criticalSince: null, fragment: null, nextFragmentAt: performance.now() + 5000,
+        stability: 0, level: 1, feedback: '', feedbackUntil: 0,
+        lastStatsUpdate: performance.now(), criticalSince: null,
+        fragment: null, nextFragmentAt: performance.now() + 5000,
+        crystal: null, nextCrystalAt: performance.now() + 11000,
+        combo: 0, comboUntil: 0, lastComboAction: '',
         dracoAction: 'idle', dracoActionUntil: 0, blinkUntil: 0,
         nextBlinkAt: performance.now() + 2500, dracoX: 400, dracoDirection: 1,
         dracoMovingUntil: 0, nextDracoDecisionAt: performance.now() + 1200,
@@ -24,7 +27,9 @@ window.DracoBits = {
     },
     constants: {
         ratingDuration: 3500, statsInterval: 1000, criticalGrace: 3000,
-        fragmentDuration: 3500, fragmentMinInterval: 4500, fragmentMaxInterval: 7500
+        fragmentDuration: 3500, fragmentMinInterval: 4500, fragmentMaxInterval: 7500,
+        crystalDuration: 5200, crystalMinInterval: 10000, crystalMaxInterval: 16000,
+        comboWindow: 5200
     },
     buttons: {
         menuPlay: { x: 280, y: 300, width: 240, height: 52, label: 'NOVO JOGO' },
@@ -42,7 +47,8 @@ window.DracoBits = {
     tutorial: [
         { title: 'ECHO // CONEXÃO INICIADA', lines: ['Bem-vindo ao Núcleo Arcadia.', 'Este é Draco, uma das últimas criaturas digitais.', 'Ele depende dos seus cuidados para sobreviver.'] },
         { title: 'NECESSIDADES E FALHAS', lines: ['As necessidades de Draco diminuem com o tempo.', 'Fragmentos corrompidos surgirão pelo cenário.', 'Clique neles antes que a falha se espalhe.'] },
-        { title: 'SUA MISSÃO', lines: ['Mantenha Draco saudável para restaurar o núcleo.', 'A estabilidade aumenta quando as necessidades estão altas.', 'Alcance 100% de estabilidade para vencer.'] }
+        { title: 'CRISTAIS E COMBOS', lines: ['Cristais oferecem bônus temporários.', 'Alterne suas ações para formar combos.', 'Combos completos aceleram a restauração.'] },
+        { title: 'SUA MISSÃO', lines: ['Mantenha Draco saudável para restaurar o núcleo.', 'A dificuldade aumenta conforme você progride.', 'Alcance 100% de estabilidade para vencer.'] }
     ],
     particles: []
 };
