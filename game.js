@@ -77,10 +77,15 @@ let dracoStats = {
 let feedbackMessage = '';
 let feedbackUntil = 0;
 let coreStability = 0;
-
+let dracoAction = 'idle';
+let dracoActionUntil = 0;
+let dracoBlinkUntil = 0;
+let nextBlinkTime = performance.now() + 2500;
+let criticalSince = null;
 let corruptedFragment = null;
 let nextFragmentTime = performance.now() + 5000;
 
+const criticalGraceTime = 3000;
 const fragmentDuration = 3500;
 const fragmentMinInterval = 4500;
 const fragmentMaxInterval = 7500;
@@ -131,7 +136,7 @@ const buttons = {
     y: 505,
     width: 160,
     height: 48,
-    label: 'ALIMENTAR'
+    label: '🍖 ALIMENTAR'
 },
 
 clean: {
@@ -139,7 +144,7 @@ clean: {
     y: 505,
     width: 160,
     height: 48,
-    label: 'LIMPAR'
+    label: '🫧 LIMPAR'
 },
 
 play: {
@@ -147,7 +152,7 @@ play: {
     y: 505,
     width: 160,
     height: 48,
-    label: 'BRINCAR'
+    label: '★ BRINCAR'
 },
 
 sleep: {
@@ -155,7 +160,7 @@ sleep: {
     y: 505,
     width: 160,
     height: 48,
-    label: 'DORMIR'
+    label: '🌙 DORMIR'
 },
 
     restart: {
@@ -215,6 +220,51 @@ function showFeedback(message, duration = 1600) {
     feedbackUntil = performance.now() + duration;
 }
 
+function setDracoAction(action, duration = 1000) {
+    dracoAction = action;
+    dracoActionUntil = performance.now() + duration;
+}
+
+function updateDracoAnimation(currentTime) {
+    if (currentState !== GAME_STATES.PLAYING) {
+        return;
+    }
+
+    if (currentTime >= nextBlinkTime) {
+        dracoBlinkUntil = currentTime + 160;
+        nextBlinkTime = currentTime + randomBetween(2200, 4800);
+    }
+
+    if (
+        dracoAction !== 'idle' &&
+        currentTime >= dracoActionUntil
+    ) {
+        dracoAction = 'idle';
+    }
+}
+
+function getDracoMood() {
+    const average = getAverageStats();
+
+    if (dracoAction === 'sleeping') {
+        return 'sleeping';
+    }
+
+    if (dracoStats.energia <= 25) {
+        return 'tired';
+    }
+
+    if (average <= 35) {
+        return 'sad';
+    }
+
+    if (average >= 75) {
+        return 'happy';
+    }
+
+    return 'neutral';
+}
+
 function randomBetween(min, max) {
     return Math.random() * (max - min) + min;
 }
@@ -253,7 +303,12 @@ function resetGame() {
     };
 
     coreStability = 0;
+    dracoAction = 'idle';
+    dracoActionUntil = 0;
+    dracoBlinkUntil = 0;
+    nextBlinkTime = performance.now() + 2500;
     corruptedFragment = null;
+    criticalSince = null;
     scheduleNextFragment(performance.now());
 
     feedbackMessage = 'Mantenha Draco saudável!';
@@ -296,8 +351,23 @@ function updateStats(currentTime) {
     );
 
     if (lowestStat <= 0) {
-        currentState = GAME_STATES.GAME_OVER;
-        return;
+        if (criticalSince === null) {
+            criticalSince = currentTime;
+
+            showFeedback(
+                'PERIGO! Você tem 3 segundos para salvar Draco!',
+                3000
+            );
+
+            return;
+        }
+
+        if (currentTime - criticalSince >= criticalGraceTime) {
+            currentState = GAME_STATES.GAME_OVER;
+            return;
+        }
+    } else {
+        criticalSince = null;
     }
 
     const averageStats = getAverageStats();
@@ -809,6 +879,212 @@ function drawProgressBar(x, y, width, height, value, color) {
     ctx.strokeRect(x, y, width, height);
 }
 
+function drawGameplayBackground() {
+    const currentTime = performance.now();
+
+    // Brilho central do Núcleo Arcadia
+    const coreGradient = ctx.createRadialGradient(
+        WIDTH / 2,
+        330,
+        20,
+        WIDTH / 2,
+        330,
+        280
+    );
+
+    coreGradient.addColorStop(
+        0,
+        'rgba(95, 211, 255, 0.14)'
+    );
+
+    coreGradient.addColorStop(
+        1,
+        'rgba(19, 34, 56, 0)'
+    );
+
+    ctx.fillStyle = coreGradient;
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    // Linhas de circuito no chão
+    ctx.save();
+
+    ctx.strokeStyle = 'rgba(95, 211, 255, 0.15)';
+    ctx.lineWidth = 2;
+
+    for (let index = 0; index < 7; index++) {
+        const y = 300 + index * 25;
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(WIDTH, y);
+        ctx.stroke();
+    }
+
+    for (let index = 0; index < 10; index++) {
+        const x = index * 90;
+
+        ctx.beginPath();
+        ctx.moveTo(x, 300);
+        ctx.lineTo(x + 40, 475);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // Cristais decorativos
+    drawDigitalCrystal(
+        350,
+        400,
+        22,
+        COLORS.softPurple,
+        currentTime
+    );
+
+    drawDigitalCrystal(
+        730,
+        345,
+        16,
+        COLORS.neonBlue,
+        currentTime + 700
+    );
+
+    drawDigitalCrystal(
+        330,
+        270,
+        12,
+        COLORS.coral,
+        currentTime + 1300
+    );
+
+    // Plataforma onde Draco fica
+    ctx.save();
+
+    ctx.shadowColor = COLORS.neonBlue;
+    ctx.shadowBlur = 25;
+
+    ctx.fillStyle = 'rgba(5, 8, 13, 0.85)';
+    ctx.strokeStyle = 'rgba(95, 211, 255, 0.8)';
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.ellipse(
+        WIDTH / 2,
+        420,
+        115,
+        30,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Núcleo ao fundo
+    drawArcadiaCore(currentTime);
+}
+
+function drawArcadiaCore(currentTime) {
+    const pulse =
+        1 + Math.sin(currentTime * 0.003) * 0.08;
+
+    const x = 650;
+    const y = 205;
+
+    ctx.save();
+
+    ctx.translate(x, y);
+    ctx.scale(pulse, pulse);
+
+    ctx.shadowColor = COLORS.neonBlue;
+    ctx.shadowBlur = 30;
+
+    ctx.strokeStyle = COLORS.neonBlue;
+    ctx.lineWidth = 3;
+
+    ctx.fillStyle = 'rgba(95, 211, 255, 0.12)';
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 48, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.rotate(currentTime * 0.0006);
+
+    ctx.beginPath();
+
+    for (let index = 0; index < 6; index++) {
+        const angle =
+            index * (Math.PI * 2 / 6);
+
+        const outerX =
+            Math.cos(angle) * 66;
+
+        const outerY =
+            Math.sin(angle) * 66;
+
+        const innerX =
+            Math.cos(angle) * 48;
+
+        const innerY =
+            Math.sin(angle) * 48;
+
+        ctx.moveTo(innerX, innerY);
+        ctx.lineTo(outerX, outerY);
+    }
+
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.fillStyle = COLORS.iceWhite;
+    ctx.font = 'bold 12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+
+    ctx.fillText(
+        'NÚCLEO',
+        x,
+        y + 90
+    );
+
+    ctx.textAlign = 'left';
+}
+
+function drawDigitalCrystal(
+    x,
+    y,
+    size,
+    color,
+    currentTime
+) {
+    const floating =
+        Math.sin(currentTime * 0.003) * 5;
+
+    ctx.save();
+
+    ctx.translate(x, y + floating);
+
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 18;
+
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.65;
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -size);
+    ctx.lineTo(size * 0.65, 0);
+    ctx.lineTo(0, size);
+    ctx.lineTo(-size * 0.65, 0);
+
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+}
+
 function drawHUD() {
     drawPanel(20, 20, 300, 235);
 
@@ -885,32 +1161,391 @@ drawProgressBar(
 }
 
 function drawDraco() {
-    ctx.save();
+    const currentTime = performance.now();
+    const mood = getDracoMood();
 
-    ctx.shadowColor = COLORS.neonBlue;
-    ctx.shadowBlur = 25;
+    const breathing =
+        Math.sin(currentTime * 0.004) * 3;
 
-    ctx.fillStyle = draco.color;
+    let jumpOffset = 0;
+    let rotation = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    if (dracoAction === 'playing') {
+        jumpOffset =
+            -Math.abs(Math.sin(currentTime * 0.012)) * 28;
+
+        rotation =
+            Math.sin(currentTime * 0.014) * 0.12;
+    }
+
+    if (dracoAction === 'eating') {
+        scaleX =
+            1 + Math.sin(currentTime * 0.025) * 0.08;
+
+        scaleY =
+            1 - Math.sin(currentTime * 0.025) * 0.05;
+    }
+
+    if (dracoAction === 'cleaning') {
+        rotation =
+            Math.sin(currentTime * 0.025) * 0.08;
+    }
+
+    if (dracoAction === 'sleeping') {
+        scaleY = 0.78;
+        jumpOffset = 15;
+    }
+
+   const centerX = draco.x + draco.width / 2;
+
+const centerY =
+    draco.y +
+    draco.height / 2 +
+    breathing +
+    jumpOffset;
+
+// Desenha a sombra sem alterar o restante do Canvas
+ctx.save();
+
+ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+
+ctx.beginPath();
+
+ctx.ellipse(
+    centerX,
+    draco.y + draco.height + 45,
+    48,
+    13,
+    0,
+    0,
+    Math.PI * 2
+);
+
+ctx.fill();
+ctx.restore();
+
+
+// Salva o contexto usado para desenhar o Draco
+ctx.save();
+
+ctx.translate(centerX, centerY);
+ctx.rotate(rotation);
+ctx.scale(scaleX, scaleY);
+
+ctx.shadowColor =
+    mood === 'sad'
+        ? COLORS.softPurple
+        : COLORS.neonBlue;
+
+ctx.shadowBlur = 28;
+
+    // Cauda
+    ctx.fillStyle = '#459BC4';
 
     ctx.beginPath();
-    ctx.roundRect(
-        draco.x,
-        draco.y,
-        draco.width,
-        draco.height,
-        18
+    ctx.moveTo(-28, 20);
+    ctx.quadraticCurveTo(-70, 20, -62, -15);
+    ctx.quadraticCurveTo(-45, 2, -25, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Asas
+    ctx.fillStyle = COLORS.softPurple;
+
+    ctx.beginPath();
+    ctx.moveTo(-25, -5);
+    ctx.lineTo(-58, -30);
+    ctx.lineTo(-47, 10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(25, -5);
+    ctx.lineTo(58, -30);
+    ctx.lineTo(47, 10);
+    ctx.closePath();
+    ctx.fill();
+
+    // Corpo
+    ctx.fillStyle =
+        mood === 'sad'
+            ? '#6684B5'
+            : draco.color;
+
+    ctx.beginPath();
+    ctx.ellipse(
+        0,
+        8,
+        39,
+        35,
+        0,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+
+    // Cabeça
+    ctx.beginPath();
+    ctx.ellipse(
+        0,
+        -23,
+        35,
+        30,
+        0,
+        0,
+        Math.PI * 2
+    );
+    ctx.fill();
+
+    // Chifres
+    ctx.fillStyle = COLORS.iceWhite;
+
+    ctx.beginPath();
+    ctx.moveTo(-21, -46);
+    ctx.lineTo(-15, -66);
+    ctx.lineTo(-6, -45);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(21, -46);
+    ctx.lineTo(15, -66);
+    ctx.lineTo(6, -45);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    drawDracoFace(mood, currentTime);
+
+    function drawDracoFace(mood, currentTime) {
+    const blinking = currentTime < dracoBlinkUntil;
+
+    ctx.strokeStyle = COLORS.background;
+    ctx.fillStyle = COLORS.background;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+
+    if (mood === 'sleeping') {
+        // Olhos fechados
+        ctx.beginPath();
+
+        ctx.moveTo(-20, -25);
+        ctx.lineTo(-8, -25);
+
+        ctx.moveTo(8, -25);
+        ctx.lineTo(20, -25);
+
+        ctx.stroke();
+
+        // Boca tranquila
+        ctx.beginPath();
+        ctx.arc(0, -8, 7, 0, Math.PI);
+        ctx.stroke();
+
+        return;
+    }
+
+    if (blinking) {
+        ctx.beginPath();
+
+        ctx.moveTo(-21, -25);
+        ctx.lineTo(-8, -25);
+
+        ctx.moveTo(8, -25);
+        ctx.lineTo(21, -25);
+
+        ctx.stroke();
+    } else if (mood === 'tired') {
+        ctx.beginPath();
+
+        ctx.moveTo(-21, -22);
+        ctx.lineTo(-8, -25);
+
+        ctx.moveTo(8, -25);
+        ctx.lineTo(21, -22);
+
+        ctx.stroke();
+    } else {
+        // Olhos
+        ctx.beginPath();
+        ctx.arc(-14, -25, 5, 0, Math.PI * 2);
+        ctx.arc(14, -25, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Brilho dos olhos
+        ctx.fillStyle = COLORS.iceWhite;
+
+        ctx.beginPath();
+        ctx.arc(-12, -27, 1.8, 0, Math.PI * 2);
+        ctx.arc(16, -27, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.strokeStyle = COLORS.coral;
+    ctx.lineWidth = 4;
+
+    if (mood === 'happy') {
+        ctx.beginPath();
+        ctx.arc(
+            0,
+            -10,
+            11,
+            0.1,
+            Math.PI - 0.1
+        );
+        ctx.stroke();
+    } else if (mood === 'sad') {
+        ctx.beginPath();
+        ctx.arc(
+            0,
+            1,
+            10,
+            Math.PI + 0.15,
+            Math.PI * 2 - 0.15
+        );
+        ctx.stroke();
+    } else if (mood === 'tired') {
+        ctx.beginPath();
+        ctx.arc(
+            0,
+            -8,
+            6,
+            0,
+            Math.PI * 2
+        );
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(-7, -9);
+        ctx.lineTo(7, -9);
+        ctx.stroke();
+    }
+}
+
+    function drawDracoReaction(currentTime) {
+    const centerX = draco.x + draco.width / 2;
+    const centerY = draco.y - 20;
+
+    if (dracoAction === 'playing') {
+        const heartY =
+            centerY -
+            25 -
+            Math.abs(Math.sin(currentTime * 0.008)) * 15;
+
+        drawHeart(centerX + 45, heartY, 10);
+        drawHeart(centerX - 45, heartY + 12, 7);
+    }
+
+    if (dracoAction === 'eating') {
+        ctx.save();
+
+        ctx.fillStyle = COLORS.coral;
+        ctx.font = 'bold 26px "Courier New", monospace';
+        ctx.textAlign = 'center';
+
+        ctx.fillText(
+            '♥',
+            centerX,
+            centerY - 30
+        );
+
+        ctx.restore();
+    }
+
+    if (dracoAction === 'cleaning') {
+        for (let index = 0; index < 5; index++) {
+            const angle =
+                currentTime * 0.003 +
+                index * 1.25;
+
+            const bubbleX =
+                centerX + Math.cos(angle) * 55;
+
+            const bubbleY =
+                centerY + 35 + Math.sin(angle) * 35;
+
+            ctx.strokeStyle =
+                'rgba(234, 247, 255, 0.75)';
+
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.arc(
+                bubbleX,
+                bubbleY,
+                4 + index,
+                0,
+                Math.PI * 2
+            );
+            ctx.stroke();
+        }
+    }
+
+    if (dracoAction === 'sleeping') {
+        ctx.save();
+
+        ctx.fillStyle = COLORS.iceWhite;
+        ctx.font = 'bold 18px "Courier New", monospace';
+
+        const floating =
+            Math.sin(currentTime * 0.004) * 5;
+
+        ctx.fillText(
+            'Z',
+            centerX + 40,
+            centerY - 20 + floating
+        );
+
+        ctx.font = 'bold 25px "Courier New", monospace';
+
+        ctx.fillText(
+            'Z',
+            centerX + 58,
+            centerY - 43 + floating
+        );
+
+        ctx.restore();
+    }
+}
+
+function drawHeart(x, y, size) {
+    ctx.save();
+
+    ctx.fillStyle = COLORS.coral;
+    ctx.shadowColor = COLORS.coral;
+    ctx.shadowBlur = 10;
+
+    ctx.beginPath();
+
+    ctx.moveTo(x, y + size / 3);
+
+    ctx.bezierCurveTo(
+        x - size,
+        y - size / 2,
+        x - size * 1.4,
+        y + size / 2,
+        x,
+        y + size
+    );
+
+    ctx.bezierCurveTo(
+        x + size * 1.4,
+        y + size / 2,
+        x + size,
+        y - size / 2,
+        x,
+        y + size / 3
     );
 
     ctx.fill();
+    ctx.restore();
+}
 
     ctx.restore();
 
-    ctx.fillStyle = COLORS.background;
-    ctx.fillRect(draco.x + 17, draco.y + 20, 8, 8);
-    ctx.fillRect(draco.x + 45, draco.y + 20, 8, 8);
-
-    ctx.fillStyle = COLORS.coral;
-    ctx.fillRect(draco.x + 28, draco.y + 47, 14, 5);
+    drawDracoReaction(currentTime);
 }
 
 function drawFeedback() {
@@ -1003,16 +1638,69 @@ function drawCorruptedFragment() {
     );
 }
 
+function drawDangerOverlay() {
+    const lowestStat = Math.min(
+        dracoStats.fome,
+        dracoStats.higiene,
+        dracoStats.felicidade,
+        dracoStats.energia
+    );
+
+    if (lowestStat > 35) {
+        return;
+    }
+
+    const currentTime = performance.now();
+
+    const opacity =
+        lowestStat <= 15
+            ? 0.16 + Math.sin(currentTime * 0.012) * 0.07
+            : 0.07;
+
+    ctx.fillStyle =
+        `rgba(214, 64, 69, ${opacity})`;
+
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    if (lowestStat <= 15) {
+        ctx.strokeStyle =
+            'rgba(255, 142, 142, 0.6)';
+
+        ctx.lineWidth = 3;
+
+        for (let index = 0; index < 5; index++) {
+            const y =
+                Math.random() * HEIGHT;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                0,
+                y
+            );
+
+            ctx.lineTo(
+                WIDTH,
+                y + randomBetween(-10, 10)
+            );
+
+            ctx.stroke();
+        }
+    }
+}
+
 function drawGameplay() {
+    drawGameplayBackground();
     drawHUD();
     drawCorruptedFragment();
     drawDraco();
+    drawDangerOverlay();
     drawFeedback();
 
     drawCenteredText(
         'DRACO',
-        390,
-        22,
+        290,
+        18,
         COLORS.neonBlue,
         'bold'
     );
@@ -1162,6 +1850,10 @@ canvas.addEventListener('mousedown', (event) => {
     if (isPointInsideButton(mouseX, mouseY, buttons.feed)) {
         dracoStats.fome = clamp(dracoStats.fome + 30);
 
+        criticalSince = null;
+        lastStatsUpdate = performance.now();
+
+        setDracoAction('eating', 1100);
         showFeedback('Draco foi alimentado!');
         return;
     }
@@ -1190,6 +1882,10 @@ canvas.addEventListener('mousedown', (event) => {
     if (isPointInsideButton(mouseX, mouseY, buttons.clean)) {
         dracoStats.higiene = clamp(dracoStats.higiene + 35);
 
+        criticalSince = null;
+        lastStatsUpdate = performance.now();
+
+        setDracoAction('cleaning', 1500);
         showFeedback('Draco está limpinho!');
         return;
     }
@@ -1208,6 +1904,10 @@ canvas.addEventListener('mousedown', (event) => {
             dracoStats.energia - 10
         );
 
+        criticalSince = null;
+        lastStatsUpdate = performance.now();
+
+        setDracoAction('playing', 2000);
         showFeedback('Draco adorou brincar!');
         return;
     }
@@ -1221,6 +1921,10 @@ canvas.addEventListener('mousedown', (event) => {
             dracoStats.fome - 8
         );
 
+        criticalSince = null;
+        lastStatsUpdate = performance.now();
+
+        setDracoAction('sleeping', 2000);
         showFeedback('Draco descansou e recuperou energia.');
     }
 
@@ -1321,6 +2025,7 @@ function update(currentTime) {
     updateParticles();
     updateStats(currentTime);
     updateCorruptedFragment(currentTime);
+    updateDracoAnimation(currentTime);
 
     if (
         currentState === GAME_STATES.RATING &&
