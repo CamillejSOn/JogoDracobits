@@ -1,0 +1,18 @@
+JOGO: DracoBits
+EQUIPE: Camille Silva;
+DISCIPLINA: Design e Desenvolvimento de Jogos — 2026
+
+== COMO JOGAR ==
+Objetivo: mantenha Draco saudável e restaure o Núcleo Arcadia até 100%.
+Controles:
+- Mouse — clicar em botões, fragmentos e cristais
+- M — ligar/desligar o áudio
+
+Dicas:
+- Alterne ações para formar combos.
+- Clique rapidamente nos fragmentos vermelhos.
+- Capture cristais verdes para receber bônus.
+
+== ÁUDIO ==
+Os efeitos sonoros são sintetizados em tempo real por meio da Web Audio API.
+Não são utilizados arquivos de áudio de terceiros nesta versão.

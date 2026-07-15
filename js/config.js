@@ -23,7 +23,9 @@ window.DracoBits = {
         dracoAction: 'idle', dracoActionUntil: 0, blinkUntil: 0,
         nextBlinkAt: performance.now() + 2500, dracoX: 400, dracoDirection: 1,
         dracoMovingUntil: 0, nextDracoDecisionAt: performance.now() + 1200,
-        echoMessage: '', echoUntil: 0, lastEchoMilestone: 0, shake: 0
+        echoMessage: '', echoUntil: 0, lastEchoMilestone: 0, shake: 0,
+        audioEnabled: true, transitionAlpha: 1, screenStartedAt: performance.now(),
+        victoryStartedAt: 0, gameOverStartedAt: 0, lastAmbientAt: 0
     },
     constants: {
         ratingDuration: 3500, statsInterval: 1000, criticalGrace: 3000,
@@ -42,7 +44,8 @@ window.DracoBits = {
         play: { x: 405, y: 505, width: 160, height: 48, label: '★ BRINCAR' },
         sleep: { x: 585, y: 505, width: 160, height: 48, label: '☾ DORMIR' },
         restart: { x: 180, y: 440, width: 200, height: 50, label: 'TENTAR NOVAMENTE' },
-        endMenu: { x: 420, y: 440, width: 200, height: 50, label: 'MENU PRINCIPAL' }
+        endMenu: { x: 420, y: 440, width: 200, height: 50, label: 'MENU PRINCIPAL' },
+        audio: { x: 650, y: 560, width: 130, height: 28, label: 'ÁUDIO: ON' }
     },
     tutorial: [
         { title: 'ECHO // CONEXÃO INICIADA', lines: ['Bem-vindo ao Núcleo Arcadia.', 'Este é Draco, uma das últimas criaturas digitais.', 'Ele depende dos seus cuidados para sobreviver.'] },

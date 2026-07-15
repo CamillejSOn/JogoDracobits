@@ -16,6 +16,15 @@
         G.state.dracoAction = action;
         G.state.dracoActionUntil = performance.now() + duration;
     };
+
+    G.goTo = screen => {
+        const now = performance.now();
+        G.state.screen = screen;
+        G.state.screenStartedAt = now;
+        G.state.transitionAlpha = 1;
+        if (screen === G.STATES.VICTORY) G.state.victoryStartedAt = now;
+        if (screen === G.STATES.GAME_OVER) G.state.gameOverStartedAt = now;
+    };
     G.pointIn = (x, y, item) => x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height;
     G.roundRect = (x, y, w, h, r = 8) => {
         const ctx = G.ctx;
@@ -34,12 +43,14 @@
             G.state.lastComboAction = '';
             G.showFeedback('COMBO COMPLETO! +8% de estabilidade', 2300);
             G.showEcho('Sequência perfeita. O núcleo absorveu a energia.', 2500);
+            G.sound('combo');
         }
     };
     G.resetGame = () => {
         const now = performance.now();
         Object.assign(G.state, {
             screen: G.STATES.PLAYING,
+            screenStartedAt: now, transitionAlpha: 1, victoryStartedAt: 0, gameOverStartedAt: 0,
             stats: { fome: 100, higiene: 100, felicidade: 100, energia: 100 },
             stability: 0, level: 1, criticalSince: null,
             fragment: null, nextFragmentAt: now + 5000,
@@ -48,7 +59,7 @@
             lastStatsUpdate: now, dracoAction: 'idle', dracoActionUntil: 0,
             blinkUntil: 0, nextBlinkAt: now + 2500, dracoX: 400, dracoDirection: 1,
             dracoMovingUntil: now + 1800, nextDracoDecisionAt: now + 2200,
-            lastEchoMilestone: 0, shake: 0
+            lastEchoMilestone: 0, shake: 0, lastAmbientAt: now
         });
         G.showFeedback('Mantenha Draco saudável!', 2500);
         G.showEcho('Conexão estabelecida. Proteja Draco.', 3000);

@@ -14,6 +14,7 @@
             G.showFeedback(`NÍVEL ${G.state.level} // Corrupção intensificada`, 2600);
             G.showEcho(G.state.level === 2 ? 'A resistência do sistema aumentou.' : 'Alerta máximo. As falhas estão acelerando.', 2800);
             G.state.shake = 8;
+            G.sound('level');
         }
     }
 
@@ -35,6 +36,7 @@
             pulse: 0
         };
         G.showEcho('Anomalia detectada. Estabilize o fragmento.', 2300);
+        G.sound('warning');
     }
 
     function scheduleCrystal(now) {
@@ -51,6 +53,7 @@
             pulse: Math.random() * Math.PI * 2
         };
         G.showEcho('Cristal de dados detectado. Capture-o!', 2300);
+        G.sound('crystal');
     }
 
     G.updateGameplay = now => {
@@ -77,7 +80,8 @@
                     G.showFeedback('PERIGO! Você tem 3 segundos para salvar Draco!', 3000);
                     G.showEcho('Não podemos perdê-lo...', 2600);
                 } else if (now - G.state.criticalSince >= G.constants.criticalGrace) {
-                    G.state.screen = G.STATES.GAME_OVER;
+                    G.goTo(G.STATES.GAME_OVER);
+                    G.sound('gameover');
                     return;
                 }
             } else {
@@ -91,8 +95,9 @@
             updateLevel();
 
             if (G.state.stability >= 100) {
-                G.state.screen = G.STATES.VICTORY;
+                G.goTo(G.STATES.VICTORY);
                 G.showEcho('Conseguimos. Arcadia foi restaurada.', 4000);
+                G.sound('victory');
                 return;
             }
 
@@ -210,6 +215,7 @@
         G.registerCombo('fragment');
         G.showFeedback('Fragmento estabilizado! +10% de estabilidade', 2200);
         G.showEcho('Boa resposta. A corrupção recuou.', 2200);
+        G.sound('fragment');
         scheduleFragment(now);
         updateLevel();
     };
@@ -230,6 +236,7 @@
         }
         G.registerCombo('crystal');
         G.showEcho('Energia de dados assimilada com sucesso.', 2400);
+        G.sound('crystal');
         scheduleCrystal(now);
         updateLevel();
     };
@@ -239,11 +246,13 @@
         if (action === 'feed') {
             s.fome = G.clamp(s.fome + 30);
             G.setDracoAction('eating', 1100);
+            G.sound('feed');
             G.showFeedback('Draco foi alimentado!');
         }
         if (action === 'clean') {
             s.higiene = G.clamp(s.higiene + 35);
             G.setDracoAction('cleaning', 1500);
+            G.sound('clean');
             G.showFeedback('Draco está limpinho!');
         }
         if (action === 'play') {
@@ -251,12 +260,14 @@
             s.felicidade = G.clamp(s.felicidade + 30);
             s.energia = G.clamp(s.energia - 10);
             G.setDracoAction('playing', 1800);
+            G.sound('play');
             G.showFeedback('Draco adorou brincar!');
         }
         if (action === 'sleep') {
             s.energia = G.clamp(s.energia + 40);
             s.fome = G.clamp(s.fome - 8);
             G.setDracoAction('sleeping', 2200);
+            G.sound('sleep');
             G.showFeedback('Draco descansou e recuperou energia.', 2200);
         }
         G.registerCombo(action);
