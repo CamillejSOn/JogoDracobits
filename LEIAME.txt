@@ -1,5 +1,5 @@
 JOGO: DracoBits
-EQUIPE: Camille Silva;
+EQUIPE: Camille Silva; Yuri Lima
 DISCIPLINA: Design e Desenvolvimento de Jogos — 2026
 
 == COMO JOGAR ==

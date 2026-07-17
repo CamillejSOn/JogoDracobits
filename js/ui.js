@@ -77,12 +77,42 @@
     };
     G.drawEcho = now => {
         if (!G.state.echoMessage || now > G.state.echoUntil) return;
-        G.panel(335, 115, 430, 56);
+
+        const fadeIn = Math.min(1, (G.state.echoUntil - now > 2100 ? 2500 - (G.state.echoUntil - now) : 1) / 250);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0.25, fadeIn);
+        ctx.shadowColor = C.softPurple;
+        ctx.shadowBlur = 18;
+        G.panel(330, 112, 440, 64);
+        ctx.shadowBlur = 0;
+
+        ctx.strokeStyle = C.softPurple;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(358, 144, 17, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = C.neonBlue;
+        ctx.fillRect(351, 140, 4, 4);
+        ctx.fillRect(361, 140, 4, 4);
+
         ctx.fillStyle = C.softPurple;
-        ctx.font = 'bold 14px Courier New';
-        ctx.fillText('ECHO:', 352, 140);
+        ctx.font = 'bold 13px Courier New';
+        ctx.fillText('ECHO //', 386, 136);
         ctx.fillStyle = C.iceWhite;
         ctx.font = '14px Courier New';
-        ctx.fillText(G.state.echoMessage, 415, 140);
+
+        const words = G.state.echoMessage.split(' ');
+        let line = '';
+        const lines = [];
+        for (const word of words) {
+            const test = line ? `${line} ${word}` : word;
+            if (ctx.measureText(test).width > 345 && line) {
+                lines.push(line);
+                line = word;
+            } else line = test;
+        }
+        if (line) lines.push(line);
+        lines.slice(0, 2).forEach((text, index) => ctx.fillText(text, 386, 156 + index * 17));
+        ctx.restore();
     };
 })();

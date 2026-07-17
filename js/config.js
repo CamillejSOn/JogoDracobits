@@ -45,7 +45,7 @@ window.DracoBits = {
         sleep: { x: 585, y: 505, width: 160, height: 48, label: '☾ DORMIR' },
         restart: { x: 180, y: 440, width: 200, height: 50, label: 'TENTAR NOVAMENTE' },
         endMenu: { x: 420, y: 440, width: 200, height: 50, label: 'MENU PRINCIPAL' },
-        audio: { x: 650, y: 560, width: 130, height: 28, label: 'ÁUDIO: ON' }
+        audio: { x: 630, y: 557, width: 150, height: 31, label: 'MÚSICA: ON' }
     },
     tutorial: [
         { title: 'ECHO // CONEXÃO INICIADA', lines: ['Bem-vindo ao Núcleo Arcadia.', 'Este é Draco, uma das últimas criaturas digitais.', 'Ele depende dos seus cuidados para sobreviver.'] },

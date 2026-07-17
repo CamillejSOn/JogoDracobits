@@ -21,12 +21,18 @@
         ctx.translate(-G.WIDTH / 2, -115);
         G.centerText('DRACOBITS', 115, 64, C.neonBlue, 'bold');
         ctx.restore();
-        G.centerText('Cuide. Proteja. Evolua.', 170, 19);
+        G.centerText('A ÚLTIMA CENTELHA DE ARCADIA', 170, 18, C.coral, 'bold');
+        G.centerText('Cuide. Proteja. Evolua.', 205, 15, 'rgba(234,247,255,.78)');
+
+        ctx.save();
+        ctx.shadowColor = C.neonBlue;
+        ctx.shadowBlur = 18 + Math.sin(now * 0.004) * 7;
         G.panel(240, 250, 320, 290);
+        ctx.restore();
         G.button(B.menuPlay);
         G.button(B.menuHelp, C.softPurple, C.iceWhite);
         G.button(B.menuCredits, C.backgroundLight, C.iceWhite, C.neonBlue);
-        G.centerText('Núcleo Arcadia // Sistema instável', 570, 14, 'rgba(234,247,255,.7)');
+        G.centerText('Núcleo Arcadia // aguardando conexão', 535, 13, 'rgba(234,247,255,.68)');
     }
 
     function help() {
