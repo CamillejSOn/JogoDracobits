@@ -45,7 +45,8 @@
         G.centerText('Fragmentos vermelhos: clique antes que desapareçam.', 365, 15, C.warning);
         G.centerText('Cristais verdes: capture para receber bônus.', 394, 15, C.success);
         G.centerText('Alterne ações para completar combos.', 423, 15, C.neonBlue);
-        G.centerText('Pressione M ou use o botão para ligar/desligar o áudio.', 452, 13, 'rgba(234,247,255,.75)');
+        G.centerText('A demo possui 4 fases e fica mais difícil a cada 25%.', 452, 13, C.coral);
+        G.centerText('Pressione M ou use o botão para ligar/desligar o áudio.', 474, 12, 'rgba(234,247,255,.75)');
         G.button(B.back, C.softPurple, C.iceWhite);
     }
 
@@ -164,6 +165,28 @@
         G.button(B.endMenu, C.backgroundLight, C.iceWhite, C.neonBlue);
     }
 
+    function drawPhaseTransition(now) {
+        if (G.state.screen !== G.STATES.PLAYING || now >= G.state.phaseTransitionUntil) return;
+
+        const remaining = G.state.phaseTransitionUntil - now;
+        const alpha = Math.min(.88, Math.max(.35, remaining / 900));
+
+        ctx.save();
+        ctx.fillStyle = `rgba(3,7,13,${alpha})`;
+        ctx.fillRect(0, 0, G.WIDTH, G.HEIGHT);
+
+        const colors = [C.success, C.warning, C.coral, C.neonBlue];
+        const color = colors[G.state.level - 1];
+
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 30;
+        G.panel(95, 185, 610, 220);
+        G.centerText(G.state.phaseTitle, 255, 30, color, 'bold');
+        G.centerText(G.state.phaseSubtitle, 310, 17, C.iceWhite);
+        G.centerText(`Dificuldade ${G.state.level}/4`, 356, 14, 'rgba(234,247,255,.72)');
+        ctx.restore();
+    }
+
     function drawAudioButton() {
         G.button(B.audio, 'rgba(5,8,13,.82)', C.iceWhite, G.state.audioEnabled ? C.success : C.danger);
     }
@@ -194,6 +217,7 @@
         else if (screen === G.STATES.PLAYING) gameplay(now);
         else if (screen === G.STATES.GAME_OVER) drawGameOver(now);
         else if (screen === G.STATES.VICTORY) drawVictory(now);
+        drawPhaseTransition(now);
         if (screen !== G.STATES.RATING) drawAudioButton();
         drawTransition();
     }
@@ -236,6 +260,7 @@
 
         if (screen === G.STATES.PLAYING) {
             const now = performance.now();
+            if (now < G.state.phaseTransitionUntil) return;
             if (G.hitCrystal(x, y)) G.collectCrystal(now);
             else if (G.hitFragment(x, y)) G.resolveFragment(now);
             else if (G.pointIn(x, y, B.feed)) G.performAction('feed');

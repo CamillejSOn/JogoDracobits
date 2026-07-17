@@ -58,8 +58,15 @@
         ctx.font = 'bold 15px Courier New';
         ctx.fillText(`Estabilidade: ${G.state.stability}%`, 520, 49);
         G.bar(520, 62, 235, 16, G.state.stability, C.neonBlue);
-        ctx.fillStyle = G.state.level === 3 ? C.danger : G.state.level === 2 ? C.warning : C.success;
-        ctx.fillText(`Nível de corrupção: ${G.state.level}`, 520, 104);
+        const phaseColors = [C.success, C.warning, C.coral, C.neonBlue];
+        ctx.fillStyle = phaseColors[G.state.level - 1];
+        ctx.fillText(`Fase ${G.state.level}/4`, 520, 101);
+        ctx.font = 'bold 11px Courier New';
+        ctx.fillText(
+            ['Arcadia Instável', 'Corrupção Crescente', 'Colapso Iminente', 'Reconstrução Final'][G.state.level - 1],
+            590,
+            101
+        );
 
         if (G.state.combo > 0) {
             const remaining = Math.max(0, G.state.comboUntil - now) / G.constants.comboWindow;

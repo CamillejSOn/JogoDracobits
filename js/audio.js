@@ -99,6 +99,10 @@
             return { notes: dangerNotes, beat: 0.42, bass: 55 };
         }
 
+        if (G.state.screen === G.STATES.PLAYING && G.state.level === 4) {
+            return { notes: [196, 246.94, 293.66, 329.63, 220, 277.18, 329.63, 392], beat: 0.36, bass: 73.42 };
+        }
+
         if (G.state.screen === G.STATES.PLAYING) {
             return { notes: gameNotes, beat: G.state.level === 2 ? 0.48 : 0.56, bass: 73.42 };
         }

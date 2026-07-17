@@ -2,18 +2,82 @@
     const G = DracoBits, ctx = G.ctx, C = G.COLORS;
 
     const levelSettings = {
-        1: { drain: [3, 2, 2, 1], fragmentMin: 5200, fragmentMax: 8000, fragmentDuration: 3900 },
-        2: { drain: [4, 3, 3, 2], fragmentMin: 4000, fragmentMax: 6200, fragmentDuration: 3200 },
-        3: { drain: [5, 4, 4, 3], fragmentMin: 2900, fragmentMax: 4700, fragmentDuration: 2600 }
+        1: {
+            name: 'ARCADIA INSTÁVEL',
+            subtitle: 'Reconecte Draco ao núcleo.',
+            drain: [3, 2, 2, 1],
+            fragmentMin: 5600,
+            fragmentMax: 8200,
+            fragmentDuration: 4100,
+            crystalMin: 9000,
+            crystalMax: 14000
+        },
+        2: {
+            name: 'CORRUPÇÃO CRESCENTE',
+            subtitle: 'As falhas estão se espalhando.',
+            drain: [4, 3, 3, 2],
+            fragmentMin: 4200,
+            fragmentMax: 6500,
+            fragmentDuration: 3400,
+            crystalMin: 11000,
+            crystalMax: 16000
+        },
+        3: {
+            name: 'COLAPSO IMINENTE',
+            subtitle: 'Mantenha Draco vivo sob pressão.',
+            drain: [5, 4, 4, 3],
+            fragmentMin: 3100,
+            fragmentMax: 4800,
+            fragmentDuration: 2800,
+            crystalMin: 12500,
+            crystalMax: 18000
+        },
+        4: {
+            name: 'RECONSTRUÇÃO FINAL',
+            subtitle: 'Complete a restauração de Arcadia.',
+            drain: [6, 5, 5, 4],
+            fragmentMin: 2300,
+            fragmentMax: 3600,
+            fragmentDuration: 2300,
+            crystalMin: 14500,
+            crystalMax: 20000
+        }
     };
+
+    function phaseFromStability(stability) {
+        if (stability >= 75) return 4;
+        if (stability >= 50) return 3;
+        if (stability >= 25) return 2;
+        return 1;
+    }
 
     function updateLevel() {
         const oldLevel = G.state.level;
-        G.state.level = G.state.stability >= 70 ? 3 : G.state.stability >= 35 ? 2 : 1;
-        if (G.state.level !== oldLevel) {
-            G.showFeedback(`NÍVEL ${G.state.level} // Corrupção intensificada`, 2600);
-            G.showEcho(G.state.level === 2 ? 'A resistência do sistema aumentou.' : 'Alerta máximo. As falhas estão acelerando.', 2800);
-            G.state.shake = 8;
+        const newLevel = Math.max(oldLevel, phaseFromStability(G.state.stability));
+        G.state.level = newLevel;
+
+        if (newLevel !== oldLevel) {
+            const cfg = levelSettings[newLevel];
+            const now = performance.now();
+
+            G.state.phaseTitle = `FASE ${newLevel} // ${cfg.name}`;
+            G.state.phaseSubtitle = cfg.subtitle;
+            G.state.phaseTransitionUntil = now + 3000;
+            G.state.fragment = null;
+            G.state.crystal = null;
+            G.state.nextFragmentAt = now + 3200;
+            G.state.nextCrystalAt = now + cfg.crystalMin;
+            G.state.shake = newLevel >= 3 ? 12 : 7;
+
+            G.showFeedback(`FASE ${newLevel} INICIADA`, 2200);
+            G.showEcho(
+                newLevel === 2
+                    ? 'A corrupção está aumentando...'
+                    : newLevel === 3
+                        ? 'Estamos perdendo Arcadia. Continue!'
+                        : 'Última etapa. Reconstrua o núcleo!',
+                3000
+            );
             G.sound('level');
         }
     }
@@ -40,7 +104,8 @@
     }
 
     function scheduleCrystal(now) {
-        G.state.nextCrystalAt = now + G.random(G.constants.crystalMinInterval, G.constants.crystalMaxInterval);
+        const cfg = levelSettings[G.state.level];
+        G.state.nextCrystalAt = now + G.random(cfg.crystalMin, cfg.crystalMax);
     }
 
     function spawnCrystal(now) {

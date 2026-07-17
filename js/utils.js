@@ -59,7 +59,10 @@
             lastStatsUpdate: now, dracoAction: 'idle', dracoActionUntil: 0,
             blinkUntil: 0, nextBlinkAt: now + 2500, dracoX: 400, dracoDirection: 1,
             dracoMovingUntil: now + 1800, nextDracoDecisionAt: now + 2200,
-            lastEchoMilestone: 0, shake: 0, lastAmbientAt: now
+            lastEchoMilestone: 0, shake: 0, lastAmbientAt: now,
+            phaseTitle: 'FASE 1 // ARCADIA INSTÁVEL',
+            phaseSubtitle: 'Estabilize Draco e reconecte o núcleo.',
+            phaseTransitionUntil: now + 2600
         });
         G.showFeedback('Mantenha Draco saudável!', 2500);
         G.showEcho('Conexão estabelecida. Proteja Draco.', 3000);

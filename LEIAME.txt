@@ -40,3 +40,10 @@ O jogo utiliza áudio sintetizado em tempo real pela Web Audio API. O navegador 
 
 == CONTATO ==
 [INSERIR E-MAILS DOS INTEGRANTES]
+
+
+== FASES DA DEMO ==
+Fase 1 — Arcadia Instável: ritmo inicial e aprendizado.
+Fase 2 — Corrupção Crescente: necessidades e falhas aceleram.
+Fase 3 — Colapso Iminente: pressão alta e eventos frequentes.
+Fase 4 — Reconstrução Final: dificuldade máxima até 100% de estabilidade.

@@ -25,7 +25,8 @@ window.DracoBits = {
         dracoMovingUntil: 0, nextDracoDecisionAt: performance.now() + 1200,
         echoMessage: '', echoUntil: 0, lastEchoMilestone: 0, shake: 0,
         audioEnabled: true, transitionAlpha: 1, screenStartedAt: performance.now(),
-        victoryStartedAt: 0, gameOverStartedAt: 0, lastAmbientAt: 0
+        victoryStartedAt: 0, gameOverStartedAt: 0, lastAmbientAt: 0,
+        phaseTitle: '', phaseSubtitle: '', phaseTransitionUntil: 0
     },
     constants: {
         ratingDuration: 3500, statsInterval: 1000, criticalGrace: 3000,
