@@ -1,18 +1,42 @@
 JOGO: DracoBits
-EQUIPE: Camille Silva; Yuri Lima
+EQUIPE: Camille Silva;
 DISCIPLINA: Design e Desenvolvimento de Jogos — 2026
+
+== DOWNLOAD E INSTALAÇÃO ==
+Link para jogar: [INSERIR LINK DO GITHUB PAGES]
+Plataforma: Web
+Requisitos: navegador moderno com suporte a HTML5 Canvas e Web Audio API.
+
+Passo a passo:
+1. Para jogar online, abra o link público no navegador.
+2. Para executar localmente, extraia o projeto e abra o arquivo index.html.
+3. Clique uma vez na tela para liberar a reprodução do áudio no navegador.
 
 == COMO JOGAR ==
 Objetivo: mantenha Draco saudável e restaure o Núcleo Arcadia até 100%.
+
 Controles:
-- Mouse — clicar em botões, fragmentos e cristais
-- M — ligar/desligar o áudio
+- Mouse — clicar nos botões, fragmentos corrompidos e cristais.
+- M — ligar ou desligar música e efeitos sonoros.
 
-Dicas:
-- Alterne ações para formar combos.
-- Clique rapidamente nos fragmentos vermelhos.
+Ações:
+- Alimentar — recupera fome.
+- Limpar — recupera higiene.
+- Brincar — recupera felicidade e consome energia.
+- Dormir — recupera energia e aumenta a fome.
+
+Dicas para o testador:
+- Alterne ações diferentes para formar combos.
+- Clique rapidamente nos fragmentos vermelhos antes que expirem.
 - Capture cristais verdes para receber bônus.
+- Mantenha todas as necessidades equilibradas para restaurar o núcleo mais rapidamente.
 
-== ÁUDIO ==
-Os efeitos sonoros são sintetizados em tempo real por meio da Web Audio API.
-Não são utilizados arquivos de áudio de terceiros nesta versão.
+== VÍDEOS ==
+Gameplay no YouTube: [INSERIR URL]
+Vídeo original: [INSERIR URL DO GOOGLE DRIVE]
+
+== INFORMAÇÕES COMPLEMENTARES ==
+O jogo utiliza áudio sintetizado em tempo real pela Web Audio API. O navegador pode bloquear o áudio até a primeira interação do usuário.
+
+== CONTATO ==
+[INSERIR E-MAILS DOS INTEGRANTES]

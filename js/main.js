@@ -54,7 +54,6 @@
         G.panel(105, 105, 590, 385);
         G.centerText('DESIGN E DESENVOLVIMENTO', 150, 19, C.coral, 'bold');
         G.centerText('Camille Silva', 188, 20);
-        G.centerText('Yuri Lima', 218, 20);
         G.centerText('PROJETO ACADÊMICO', 270, 19, C.coral, 'bold');
         G.centerText('Design e Desenvolvimento de Jogos — UFOP', 307, 16);
         G.centerText('ÁUDIO', 355, 19, C.coral, 'bold');
